@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================
+Build Store2Latex.
+============================================================= -->
+<project name="store2latex" default="compile" basedir=".">
+
+  <description>
+    Build Store2Latex.
+  </description>
+
+  <property environment="env"/>
+
+  <property name="src.dir"             value="${basedir}/src"/>
+  <property name="build.dir"           value="${basedir}/classes"/>
+  <property name="lib.dir"             value="${basedir}/lib"/>
+
+  <path id="compile.classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="runtime.classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+    <pathelement path="${build.dir}"/>
+  </path>
+
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+
+  <target name="check-environment">
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <target name="clean" description="Clean environment.">
+    <delete includeEmptyDirs="true">
+      <fileset dir="${build.dir}" includes="**/*"/>
+    </delete>
+  </target>
+
+  <target name="compile" depends="check-environment"
+          description="Compile java sources.">
+    <javac srcdir="${src.dir}"
+	   destdir="${build.dir}"
+	   debug="${compile.debug}"
+	   deprecation="${compile.deprecation}"
+	   optimize="${compile.optimize}">
+      <classpath refid="compile.classpath"/>
+    </javac>
+    <!-- Copy files other than java.   -->
+    <copy todir="${build.dir}" preservelastmodified="true" overwrite="true">
+      <fileset dir="${src.dir}">
+        <exclude name="**/*.java"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="example-download-page" depends="compile"
+          description="Run the download example.">
+    <mkdir dir="${basedir}/examples/MPS-page/download"/>
+    <java classname="org.mar9000.space2latex.Space2Latex">
+      <classpath refid="runtime.classpath"/>
+      <arg line="--command=download --url=https://confluence.jetbrains.com/rest/api/content/59935365 --limit=7 --dest-dir=${basedir}/examples/MPS-page/download"/>
+    </java>
+  </target>
+
+  <target name="example-format-page" depends="compile"
+          description="Run the download example.">
+    <mkdir dir="${basedir}/examples/MPS-page/latex"/>
+    <java classname="org.mar9000.space2latex.Space2Latex">
+      <classpath refid="runtime.classpath"/>
+      <arg line="--command=format --dest-dir=${basedir}/examples/MPS-page/download --latex-dir=${basedir}/examples/MPS-page/latex"/>
+    </java>
+  </target>
+  
+</project>
+
+

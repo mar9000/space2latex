@@ -1,0 +1,9 @@
+<document title="MPS 3.3 Documentation"
+          author="Formatted by \href{https://github.com/mar9000/space2latex}{Space2Latex} from the MPS wiki"
+          date="2016-01-26"
+          baseurl="https://confluence.jetbrains.com/display"
+          space="MPSD33">
+    <part title="Defining Languages">
+      <chapter title="Generator"/>
+    </part>
+</document>
