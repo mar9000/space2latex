@@ -131,16 +131,13 @@ contents={%
 \maketitle
 \clearpage
 
-% TOC.
-\tableofcontents
-
 % ---------- Verbatim definitions.   ----------
 
 «d.verbatimDefs.verbatimDefs : verbatimDef(); separator="\n\n"»
 
 % ---------- Parts.   ----------
 
-«d.parts : part(); separator="\n\n"»
+«d.parts : documentPart(); separator="\n\n"»
 
 % End.
 \end{document}
@@ -161,18 +158,29 @@ VerbatimUse(e) ::= <<
 >>
 
 // --- Part and chapter.   ---
-part(p) ::= <<
+
+// This will call the template named as the current class.
+documentPart(dp) ::= <<
+«dp:(dp.class.simpleName)()»
+>>
+
+TOC(toc) ::= <<
+% TOC.
+\tableofcontents
+>>
+
+Part(p) ::= <<
 % Part: «p.title» .
 \part{«p.title»}
 
-«p.chapters:chapter(); separator="\n\n"»
+«p.chapters:Chapter(); separator="\n\n"»
 
 % End of part: «p.title» .
 >>
 
-chapter(c) ::= <<
+Chapter(c) ::= <<
 % Chapter from page: «c.title» .
-\chapter{«c.latexTitle»}
+«if(!c.inline)»\chapter{«c.latexTitle»}«else»{\vspace*{1in}\Huge «c.latexTitle» \vspace*{.5in}}«endif»
 
 «c.elements:element()»
 % End of chapter from page: «c.title» .

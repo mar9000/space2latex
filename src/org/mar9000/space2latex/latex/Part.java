@@ -19,7 +19,7 @@ package org.mar9000.space2latex.latex;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Part {
+public class Part implements DocumentPart {
 	
 	public String title = null;
 	private List<Chapter> chapters = new ArrayList<Chapter>();

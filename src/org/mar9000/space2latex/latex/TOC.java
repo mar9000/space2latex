@@ -16,21 +16,6 @@
  */
 package org.mar9000.space2latex.latex;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class Chapter implements DocumentPart {
-	
-	public String title = null;
-	public String latexTitle = null;
-	public int number = -1;
-	public boolean inline = false;
-
-	public Chapter(String title) {
-		this.title = title;
-		this.latexTitle = TextElement.escapeString(title);
-	}
-	
-	public List<LatexElement> elements = new ArrayList<LatexElement>();
+public class TOC implements DocumentPart {
 	
 }

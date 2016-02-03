@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,6 +35,7 @@ import org.mar9000.space2latex.latex.Chapter;
 import org.mar9000.space2latex.latex.Formatter;
 import org.mar9000.space2latex.latex.LatexDocument;
 import org.mar9000.space2latex.latex.Part;
+import org.mar9000.space2latex.latex.TOC;
 import org.mar9000.space2latex.utils.ConfluenceRESTUtils;
 import org.mar9000.space2latex.utils.IOUtils;
 import org.stringtemplate.v4.ST;
@@ -40,6 +43,8 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 public class Space2Latex {
+	
+	private static Logger LOGGER = Logger.getLogger("Space2Latex");
 
 	public static void main(String[] args) throws Exception {
 		Space2Latex s2l = new Space2Latex(args);
@@ -54,6 +59,7 @@ public class Space2Latex {
 	public final static String SWITCH_START = "--start";
 	public final static String SWITCH_LIMIT = "--limit";
 	public final static String SWITCH_INCLUDE_ALL = "--include-all";
+	public final static String SWITCH_DOCUMENTS_DEF = "--documents-def";
 	public final static String COMMAND_DOWNLOAD = "download";
 	public final static String COMMAND_FORMAT = "format";
 	private HashMap<String, String> params = new HashMap<String, String>();
@@ -72,6 +78,8 @@ public class Space2Latex {
 				params.put(SWITCH_DEST_DIR, getParameterValue(args[i]));
 			} else if (args[i].startsWith(SWITCH_LATEX_DIR)) {
 				params.put(SWITCH_LATEX_DIR, getParameterValue(args[i]));
+			} else if (args[i].startsWith(SWITCH_DOCUMENTS_DEF)) {
+				params.put(SWITCH_DOCUMENTS_DEF, getParameterValue(args[i]));
 			} else if (args[i].startsWith(SWITCH_EXCLUDE)) {
 				excludes.add(WikiPage.PAGE_PREFIX + getParameterValue(args[i]) + WikiPage.PAGE_EXTENSION);
 			} else if (args[i].startsWith(SWITCH_START)) {
@@ -107,7 +115,7 @@ public class Space2Latex {
 		if (url == null) {
 			showError(SWITCH_URL + " parameter is mandatory.");
 		} else {
-			System.out.println("Download URL: " + url);
+			LOGGER.log(Level.INFO, "Download URL: {}", url);
 		}
 		//
 		String destDirName = params.get(SWITCH_DEST_DIR);
@@ -117,7 +125,7 @@ public class Space2Latex {
 		if (!destDir.isDirectory()) {
 			showError("Destination directory " + destDirName + " is not a directory.");
 		} else {
-			System.out.println("Destination directory: " + destDir.getAbsolutePath());
+			LOGGER.log(Level.INFO, "Destination directory: {}", destDir.getAbsolutePath());
 		}
 		// Download pages returned by the passed URL.
 		int start = params.get(SWITCH_START) != null ?
@@ -133,65 +141,56 @@ public class Space2Latex {
 		}
 	}
 	
+	private boolean createMissingChapters = false;
+	private File[] pageFiles = null;
+	private File destDir = null;
+	private File latexDir = null;
+	private Map<String, WikiPage> pages = null;
 	private void executeFormat() {
 		// Get source (dest-dir) directory and target (latex-dir) directory.
 		String destDirName = params.get(SWITCH_DEST_DIR);
 		if (destDirName == null)
 			destDirName = ".";
-		File destDir = new File(destDirName);
+		destDir = new File(destDirName);
 		if (!destDir.isDirectory()) {
 			showError("Destination directory " + destDirName + " is not a directory.");
 		} else {
-			System.out.println("Destination directory used during download: " + destDir);
+			LOGGER.log(Level.INFO, "Destination directory used during download: {0}", destDir);
 		}
 		// Latex dir.
 		String latexDirName = params.get(SWITCH_LATEX_DIR);
 		if (latexDirName == null)
 			latexDirName = ".";
-		File latexDir = new File(latexDirName);
+		latexDir = new File(latexDirName);
 		if (!latexDir.isDirectory()) {
 			showError("Destination directory for latex files " + latexDirName + " is not a directory.");
 		} else {
 			System.out.println("Generated files will go to: " + latexDir);
 		}
+		// Document definition.
+		String documentsDefPath = params.get(SWITCH_DOCUMENTS_DEF);
+		if (documentsDefPath == null)
+			documentsDefPath = "/templates/documents-def.xml";
+		File documentsDef = new File(documentsDefPath);
+		if (!documentsDef.exists()) {
+			showError("Documents definition does not exists: " + documentsDefPath);
+		} else if (documentsDef.isDirectory()) {
+			showError("Documents definition " + documentsDefPath + " is a directory.");
+		} else {
+			System.out.println("Pages will be processed accordly to: " + documentsDefPath);
+		}
 		// Create missing chapter?
-		boolean createMissingChapters = params.get(SWITCH_INCLUDE_ALL).equals("true");
+		createMissingChapters = params.get(SWITCH_INCLUDE_ALL).equals("true");
 		
 		// Load page files from dir. used during download.
-		File[] pageFiles = destDir.listFiles(new FilenameFilter() {
+		pageFiles = destDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.endsWith(WikiPage.PAGE_EXTENSION);
 			}
 		});
-		
-		// Load part/chapters associations.
-		String documentData = null;
-		try {
-			documentData = IOUtils.readResourceAsString("/templates/document-data.html");
-		} catch (Exception e) {
-			e.printStackTrace();
-			showError("document-data.html not found.");
-		}
-		Document data = Jsoup.parse(documentData);
-		Element body = data.body();
-		Element document = body.select("document").first();
-		Elements parts = document.select("part");
-		LatexDocument latexDocument = new LatexDocument(document.attr("title")
-				, document.attr("author"), document.attr("date")
-				, document.attr("baseurl"), document.attr("space"));
-		for (Element part : parts) {
-			Part latexPart = new Part(part.attr("title"));
-			latexDocument.addPart(latexPart);
-			Elements chapters = part.select("chapter");
-			for (Element chapter : chapters) {
-				Chapter latexChapter = new Chapter(chapter.attr("title"));
-				latexDocument.addChapter(latexPart, latexChapter);
-			}
-		}
-		
 		// First load all pages, needed to resolve "include" macros.
-		Map<String, WikiPage> pages = new HashMap<String, WikiPage>();
+		pages = new HashMap<String, WikiPage>();
 		for (int f = 0; f < pageFiles.length; f++) {
 			try {
 				WikiPage page = WikiPage.loadForFormat(pageFiles[f]);
@@ -204,6 +203,66 @@ public class Space2Latex {
 			} catch (Exception e) {
 				e.printStackTrace();
 				showError("Error loading file: " + pageFiles[f].getAbsolutePath());
+			}
+		}
+		
+		// Load documents.
+		String documentsDefData = null;
+		try {
+			documentsDefData = IOUtils.readFileAsString(new File(documentsDefPath));
+		} catch (Exception e) {
+			e.printStackTrace();
+			showError(documentsDefPath + " read error.");
+		}
+		Document data = Jsoup.parse(documentsDefData);
+		Element body = data.body();
+		Element documents = body.select("documents").first();
+		Elements documentsList = documents.select("document");
+		// Format each document.
+		for (Element document : documentsList) {
+			if (document.attr("enabled").equals("false")) {
+				LOGGER.log(Level.INFO, "Document is not enabled: {0}", document.attr("title"));
+				continue;
+			}
+			formatDocument(document);
+		}
+		
+		// Display result about not included pages.
+		System.out.println("\nPages not inclded in any document:");
+		for (String pageTitle : pages.keySet()) {
+			WikiPage page = pages.get(pageTitle);
+			if (!page.isExcluded && !page.alreadyIncluded) {
+				System.out.println("  " + pageTitle);
+			}
+		}
+	}
+	
+	/**
+	 * Format a single document.
+	 */
+	private void formatDocument(Element document) {
+		Elements documentParts = document.children();
+		LatexDocument latexDocument = new LatexDocument(document.attr("title")
+				, document.attr("author"), document.attr("date")
+				, document.attr("baseurl"), document.attr("space"));
+		for (Element documentPart : documentParts) {
+			String nodeName = documentPart.nodeName();
+			if (nodeName.equals("toc")) {
+				latexDocument.addDocumentPart(new TOC());
+			} else if (nodeName.equals("part")) {
+				Element part = documentPart;
+				Part latexPart = new Part(part.attr("title"));
+				latexDocument.addDocumentPart(latexPart);
+				Elements chapters = part.select("chapter");
+				for (Element chapter : chapters) {
+					Chapter latexChapter = new Chapter(chapter.attr("title"));
+					latexDocument.addChapter(latexPart, latexChapter);
+				}
+			} else if (nodeName.equals("chapter")) {
+				Chapter c = new Chapter(documentPart.attr("title"));
+				if (documentPart.attr("inline").equals("true"))
+					c.inline = true;
+				latexDocument.addDocumentPart(c);
 			}
 		}
 		

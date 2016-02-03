@@ -29,7 +29,7 @@ public class LatexDocument {
 	public String baseUrl = null;
 	public String space = null;
 	public VerbatimDefs verbatimDefs = null;
-	private List<Part> parts = new ArrayList<Part>();
+	private List<DocumentPart> parts = new ArrayList<DocumentPart>();
 	private Map<String, Chapter> chapters = new HashMap<String, Chapter>();
 	
 	public LatexDocument(String title, String author, String date, String url, String space) {
@@ -45,8 +45,12 @@ public class LatexDocument {
 		this.space = space;
 	}
 	
-	public void addPart(Part part) {
-		parts.add(part);
+	public void addDocumentPart(DocumentPart documentPart) {
+		parts.add(documentPart);
+		if (documentPart instanceof Chapter) {
+			Chapter c = (Chapter)documentPart;
+			chapters.put(c.title, c);
+		}
 	}
 	
 	public void addChapter(Part part, Chapter chapter) {
@@ -62,7 +66,7 @@ public class LatexDocument {
 		if (c == null && create) {
 			if (appendixPart == null) {
 				appendixPart = new Part("Appendix");
-				addPart(appendixPart);
+				addDocumentPart(appendixPart);
 			}
 			c = new Chapter(title);
 			addChapter(appendixPart, c);
@@ -70,8 +74,8 @@ public class LatexDocument {
 		return c;
 	}
 	
-	public Part[] getParts() {
-		Part[] a = new Part[parts.size()];
+	public DocumentPart[] getParts() {
+		DocumentPart[] a = new DocumentPart[parts.size()];
 		parts.toArray(a);
 		return a;
 	}

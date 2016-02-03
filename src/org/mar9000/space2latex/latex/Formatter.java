@@ -504,7 +504,13 @@ public class Formatter {
 					Warning warn = new Warning();
 					result.add(warn);
 					Element richText = element.select("ac|rich-text-body").first();
-					formatNodes(richText.childNodes(), warn.elements);
+					List<Node> warnNodes = null;
+					if (richText != null) {
+						warnNodes = richText.childNodes();
+					} else {
+						warnNodes = element.childNodes();
+					}
+					formatNodes(warnNodes, warn.elements);
 				} else if (element.nodeName().equals("ac:parameter") && node.attr("ac:name").equals("title")) {
 					Hx h5 = new Hx();
 					h5.fontSize = "large";
