@@ -24,16 +24,21 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.mar9000.space2latex.log.S2LLogUtils;
 import org.mar9000.space2latex.utils.ConfluenceRESTUtils;
 import org.mar9000.space2latex.utils.IOUtils;
 
 public class WikiPage {
+	
+	private static Logger LOGGER = S2LLogUtils.getLogger(WikiPage.class.getName());
 	
 	public static final String JSON_TYPE_ATTR = "type";
 	public static final String JSON_TYPE_VALUE_PAGE = "page";
@@ -80,7 +85,7 @@ public class WikiPage {
 			storage = bodyObj.getJSONObject(JSON_STORAGE_ATTR).getString(JSON_VALUE_ATTR);
 		}
 		WikiPage page = new WikiPage(jsonPage, title, id, storage);
-		System.out.println("  Page downloaded: " + title);
+		LOGGER.log(Level.INFO, "  Page downloaded: {0}", title);
 		downloadWikiPageImages(page);
 		return page;
 	}
@@ -91,7 +96,7 @@ public class WikiPage {
 		document.outputSettings().prettyPrint(false);
 		Elements images = document.select("ac|image");
 		if (images.size() > 0)
-			System.out.println("  Download images:");
+			LOGGER.info("  Download images:");
 		for (Element element : images) {
 			String downloadURL = null;
 			String imageKey = null;
@@ -148,10 +153,11 @@ public class WikiPage {
 			// Download the image data.
 			image.filename = imageKey.replace(' ', '_');   // Space are not handled by LaTeX.
 			if (downloadURL != null) {
-				System.out.println("    about to download image " + image.pageId + "/" + image.filename);
+				LOGGER.log(Level.INFO, "    about to download image {0}/{1}", new Object[]{image.pageId, image.filename});
 				image.data = IOUtils.getImageFromURL(downloadURL);
 			} else {
-				System.err.println("    NULL download URL for page/image: " + image.pageId + "/" + image.filename);
+				LOGGER.log(Level.SEVERE, "    NULL download URL for page/image: {0}/{1}"
+						, new Object[]{image.pageId, image.filename});
 			}
 			page.images.put(imageKey, image);
 		}
@@ -160,8 +166,8 @@ public class WikiPage {
 	private static String getAttachmentDownloadURL(String queryURL) throws MalformedURLException {
 		JSONObject response = ConfluenceRESTUtils.getURLResponse(queryURL);
 		if (response.getInt(JSON_SIZE_ATTR) == 0) {
-			System.err.println("Image at URL non found: " + queryURL);
-			System.err.println("Response: " + response.toString());
+			LOGGER.log(Level.SEVERE, "Image at URL non found: {0}", queryURL);
+			LOGGER.log(Level.SEVERE, "Response: {0}", response.toString());
 			return null;
 		}
 		JSONObject firstResult = (JSONObject)response.getJSONArray(JSON_RESULTS_ATTR).get(0);

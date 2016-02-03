@@ -36,6 +36,7 @@ import org.mar9000.space2latex.latex.Formatter;
 import org.mar9000.space2latex.latex.LatexDocument;
 import org.mar9000.space2latex.latex.Part;
 import org.mar9000.space2latex.latex.TOC;
+import org.mar9000.space2latex.log.S2LLogUtils;
 import org.mar9000.space2latex.utils.ConfluenceRESTUtils;
 import org.mar9000.space2latex.utils.IOUtils;
 import org.stringtemplate.v4.ST;
@@ -44,7 +45,7 @@ import org.stringtemplate.v4.STGroupFile;
 
 public class Space2Latex {
 	
-	private static Logger LOGGER = Logger.getLogger("Space2Latex");
+	private static Logger LOGGER = S2LLogUtils.getLogger(Space2Latex.class.getName());
 
 	public static void main(String[] args) throws Exception {
 		Space2Latex s2l = new Space2Latex(args);
@@ -115,7 +116,7 @@ public class Space2Latex {
 		if (url == null) {
 			showError(SWITCH_URL + " parameter is mandatory.");
 		} else {
-			LOGGER.log(Level.INFO, "Download URL: {}", url);
+			LOGGER.log(Level.INFO, "Download URL: {0}", url);
 		}
 		//
 		String destDirName = params.get(SWITCH_DEST_DIR);
@@ -125,14 +126,14 @@ public class Space2Latex {
 		if (!destDir.isDirectory()) {
 			showError("Destination directory " + destDirName + " is not a directory.");
 		} else {
-			LOGGER.log(Level.INFO, "Destination directory: {}", destDir.getAbsolutePath());
+			LOGGER.log(Level.INFO, "Destination directory: {0}", destDir.getAbsolutePath());
 		}
 		// Download pages returned by the passed URL.
 		int start = params.get(SWITCH_START) != null ?
 				Integer.parseInt(params.get(SWITCH_START)) : 0;
 		int limit = params.get(SWITCH_LIMIT) != null ?
 				Integer.parseInt(params.get(SWITCH_LIMIT)) : ConfluenceRESTUtils.LIMIT_FOR_REQUEST;
-		System.out.println("Download limits: start=" + start + ", limit=" + limit);
+		LOGGER.log(Level.INFO, "Download limits: start={0}, limit={1}", new Object[]{start, limit});
 		try {
 			ConfluenceRESTUtils.getPages(url, start, limit, destDir);
 		} catch (MalformedURLException e) {
@@ -165,7 +166,7 @@ public class Space2Latex {
 		if (!latexDir.isDirectory()) {
 			showError("Destination directory for latex files " + latexDirName + " is not a directory.");
 		} else {
-			System.out.println("Generated files will go to: " + latexDir);
+			LOGGER.log(Level.INFO, "Generated files will go to: {0}", latexDir);
 		}
 		// Document definition.
 		String documentsDefPath = params.get(SWITCH_DOCUMENTS_DEF);
@@ -177,7 +178,7 @@ public class Space2Latex {
 		} else if (documentsDef.isDirectory()) {
 			showError("Documents definition " + documentsDefPath + " is a directory.");
 		} else {
-			System.out.println("Pages will be processed accordly to: " + documentsDefPath);
+			LOGGER.log(Level.INFO, "Pages will be processed accordly to: {0}", documentsDefPath);
 		}
 		// Create missing chapter?
 		createMissingChapters = params.get(SWITCH_INCLUDE_ALL).equals("true");
@@ -198,7 +199,7 @@ public class Space2Latex {
 				// Exclude?
 				if (excludes.contains(pageFiles[f].getName())) {
 					page.isExcluded = true;
-					System.out.println("Page will be excluded as requested: " + page.title);
+					LOGGER.log(Level.INFO, "Page will be excluded as requested: {0}", page.title);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -228,11 +229,11 @@ public class Space2Latex {
 		}
 		
 		// Display result about not included pages.
-		System.out.println("\nPages not inclded in any document:");
+		LOGGER.info("\nPages not inclded in any document:");
 		for (String pageTitle : pages.keySet()) {
 			WikiPage page = pages.get(pageTitle);
 			if (!page.isExcluded && !page.alreadyIncluded) {
-				System.out.println("  " + pageTitle);
+				LOGGER.log(Level.INFO, "  {0}", pageTitle);
 			}
 		}
 	}
@@ -267,7 +268,7 @@ public class Space2Latex {
 		}
 		
 		// Add content to chapters using page files.
-		System.out.println("");
+		LOGGER.info("");
 		Formatter formatter = new Formatter(destDir, pages, latexDocument);
 		formatter.format(createMissingChapters);
 		
@@ -293,7 +294,7 @@ public class Space2Latex {
 	}
 	
 	private void showError(String message) {
-		System.err.println(message);
+		LOGGER.severe(message);
 		System.exit(1);
 	}
 	
