@@ -101,6 +101,11 @@ document(d) ::= <<
   overlay={%
     \path[fill=red!50!black,draw=none] (interior.south west) rectangle node[white]{\Huge\bfseries !} ([xshift=4mm]interior.north west);
     },#1}
+% Emoticons.
+\newcommand{\emoticonlight}{\includegraphics{../lightbulb_on.pdf}}
+\newcommand{\emoticonwarning}{\tcbox[tcbox raise base,nobeforeafter,colback=red!5!white,colframe=red!75!black,valign=center,arc=2mm,top=.1mm,bottom=.1mm,left=.5mm,right=.5mm]{!}\hspace{.4em}}
+\newcommand{\emoticoninformation}{\tcbox[tcbox raise base,nobeforeafter,colback=blue!5!white,colframe=blue!75!black,valign=center,arc=2mm,top=.1mm,bottom=.1mm,left=.5mm,right=.5mm]{i}\hspace{.4em}}
+\newcommand{\emoticontip}{\tcbox[tcbox raise base,nobeforeafter,colback=green!5!white,colframe=green!75!black,valign=center,arc=2mm,top=.1mm,bottom=.1mm,left=.5mm,right=.5mm]{Tip}\hspace{.4em}}
 
 % Default font to sans serif.
 \renewcommand{\familydefault}{\sfdefault}
@@ -117,6 +122,10 @@ contents={%
   \raisebox{0.75\paperheight}[0pt][0pt]{\makebox[0pt]{\includegraphics[width=.75\paperwidth]{../mps-text.pdf}}}
   }%
 }
+
+% Used to make \hyperref robust because otherwise can't be used inside \section{} commands.
+\usepackage{makerobust}
+\MakeRobustCommand\hyperlink
 
 % Front page data.
 \title{«d.title»}
@@ -180,7 +189,7 @@ Part(p) ::= <<
 
 Chapter(c) ::= <<
 % Chapter from page: «c.title» .
-«if(!c.inline)»\chapter{«c.latexTitle»}«else»{\vspace*{1in}\Huge «c.latexTitle» \vspace*{.5in}}«endif»
+«if(!c.inline)»\chapter{«c.latexTitle»}«else»\vspace*{1in} {\Huge \textbf{«c.latexTitle»}} \vspace*{.5in}«endif»
 
 «c.elements:element()»
 % End of chapter from page: «c.title» .
@@ -264,6 +273,10 @@ Bold(e) ::= <<
 
 TextTT(e) ::= <<
 \texttt{«e.elements:element()»}
+>>
+
+TextUnderline(e) ::= <<
+\underline{«e.elements:element()»}
 >>
 
 Hx(h) ::= <<
@@ -350,5 +363,5 @@ Hrule(h) ::= <<
 >>
 
 Emoticon(e) ::= <<
-\fcolorbox{«if(e.light)»blue«else»black«endif»}{«if(e.light)»blue«else»yellow«endif»}{\color{«if(e.light)»white«else»black«endif»}«if(e.light)»i«else»!«endif»}
+\emoticon«e.typeString» 
 >>

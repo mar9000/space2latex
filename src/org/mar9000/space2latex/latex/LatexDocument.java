@@ -53,11 +53,12 @@ public class LatexDocument {
 		}
 	}
 	
+	private int chapterCounter = 1;
 	public void addChapter(Part part, Chapter chapter) {
 		part.addChapter(chapter);
 		chapters.put(chapter.title, chapter);
-		if (chapter.number == -1)
-			chapter.number = chapters.size();
+		if (chapter.number == -1 && !chapter.inline)
+			chapter.number = chapterCounter++;
 	}
 	
 	private Part appendixPart = null;

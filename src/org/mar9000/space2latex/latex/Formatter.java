@@ -363,13 +363,8 @@ public class Formatter {
 					formatNodes(node.childNodes(), info.elements);
 				} else if (node.nodeName().equals("ac:macro") && node.attr("ac:name").equals("info")) {
 					Info info = new Info();
-					Element richTextBody = element.select("ac|rich-text-body").first();
-					if (richTextBody == null) {
-						System.err.println("rich-text-body not found.");
-						continue;
-					}
 					result.add(info);
-					formatNodes(richTextBody.childNodes(), info.elements);
+					formatNodes(element.childNodes(), info.elements);
 				} else if (node.nodeName().equals("ac:rich-text-body")) {
 					// Include content.
 					formatNodes(element.childNodes(), result);
@@ -462,6 +457,10 @@ public class Formatter {
 											St st = new St();
 											result.add(st);
 											container = st.elements;
+										} else if (decoration.equals("underline")) {
+											TextUnderline underline = new TextUnderline();
+											result.add(underline);
+											container = underline.elements;
 										} else {
 											System.err.println("Text decoration not supported: " + decoration);
 										}
@@ -540,10 +539,15 @@ public class Formatter {
 						result.add(new Emoticon(Emoticon.LIGHT_ON));
 					} else if (name.equals("warning")) {
 						result.add(new Emoticon(Emoticon.WARNING));
+					} else if (name.equals("information")) {
+						result.add(new Emoticon(Emoticon.INFORMATION));
+					} else if (name.equals("tick")) {
+						result.add(new Emoticon(Emoticon.TIP));
 					} else {
 						System.err.println("Emoticon not supported: " + name);
 					}
-				} else if (element.nodeName().equals("ac:macro") && node.attr("ac:name").equals("note")) {
+				} else if ((element.nodeName().equals("ac:macro") || element.nodeName().equals("ac:structured-macro"))
+						&& node.attr("ac:name").equals("note")) {
 					Info info = new Info();
 					result.add(info);
 					formatNodes(node.childNodes(), info.elements);
@@ -557,6 +561,9 @@ public class Formatter {
 					formatNodes(richTextBody.childNodes(), result);
 				} else if (node.nodeName().equals("ac:macro") && node.attr("ac:name").equals("unmigrated-wiki-markup")) {
 					System.err.println("\"unmigrated wiki markup in " + pagesStack.peek().title);
+				} else if (element.nodeName().equals("ac:default-parameter")) {
+					// I think this should be ignored, do nothing.
+					continue;
 				} else {
 					//throw new IllegalArgumentException("Element " + element.nodeName() + " not supported.");
 					System.err.println("Element " + element.nodeName() + " not supported.");

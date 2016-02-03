@@ -221,15 +221,19 @@ public class Space2Latex {
 		Elements documentsList = documents.select("document");
 		// Format each document.
 		for (Element document : documentsList) {
+			LOGGER.info("\n********** Begin document. **********");
 			if (document.attr("enabled").equals("false")) {
 				LOGGER.log(Level.INFO, "Document is not enabled: {0}", document.attr("title"));
-				continue;
+			} else {
+				LOGGER.log(Level.INFO, "Format document: {0}", document.attr("title"));
+				formatDocument(document);
 			}
-			formatDocument(document);
+			LOGGER.info("********** End document. **********");
 		}
 		
 		// Display result about not included pages.
-		LOGGER.info("\nPages not inclded in any document:");
+		LOGGER.info("\n********** Resume. **********");
+		LOGGER.info("Pages not inclded in any document:");
 		for (String pageTitle : pages.keySet()) {
 			WikiPage page = pages.get(pageTitle);
 			if (!page.isExcluded && !page.alreadyIncluded) {

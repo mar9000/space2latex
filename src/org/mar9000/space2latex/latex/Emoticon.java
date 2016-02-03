@@ -21,9 +21,23 @@ public class Emoticon implements LatexElement {
 	public int type = -1;
 	public static final int LIGHT_ON = 0;
 	public static final int WARNING = 1;
+	public static final int INFORMATION = 2;
+	public static final int TIP = 3;
 	
 	public Emoticon(int type) {
 		this.type = type;
+	}
+	
+	public String getTypeString() {
+		if (isLight())
+			return "light";
+		if (isWarning())
+			return "warning";
+		if (isInformation())
+			return "information";
+		if (isTip())
+			return "tip";
+		return "unknown";
 	}
 	
 	public boolean isLight() {
@@ -32,6 +46,14 @@ public class Emoticon implements LatexElement {
 	
 	public boolean isWarning() {
 		return type == WARNING;
+	}
+	
+	public boolean isInformation() {
+		return type == INFORMATION;
+	}
+	
+	public boolean isTip() {
+		return type == TIP;
 	}
 	
 }
