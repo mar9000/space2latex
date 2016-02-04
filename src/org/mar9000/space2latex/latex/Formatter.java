@@ -23,13 +23,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+import org.mar9000.space2latex.Space2Latex;
 import org.mar9000.space2latex.WikiImage;
 import org.mar9000.space2latex.WikiPage;
+import org.mar9000.space2latex.log.S2LLogUtils;
 import org.w3c.css.sac.InputSource;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSStyleDeclaration;
@@ -40,6 +44,8 @@ import com.steadystate.css.parser.CSSOMParser;
 
 public class Formatter {
 
+	private static Logger LOGGER = S2LLogUtils.getLogger(Formatter.class.getName());
+	
 	private final static String SPACE_PREFIX = "MPSD";
 	private File downloadDir = null;
 	private LatexDocument latexDocument = null;
@@ -413,12 +419,24 @@ public class Formatter {
 							.select("ac|structured-macro").first().select("ac|rich-text-body").first();
 					formatNodes(richtext.childNodes(), result);
 				} else if (node.nodeName().equals("ac:image")) {
+					// TODO: do not use ac:image string to retrieve images, some image is included with more than one width.
 					String acImage = element.outerHtml();
 					WikiImage image = pagesStack.peek().images.get(acImage);
 					if (image == null) {
-						//throw new IllegalArgumentException("ac:image not found in page images: " + element.outerHtml());
-						System.err.println("ac:image not found in page images: " + element.outerHtml());
-						continue;
+						// Some images are included with different width, try to search only ri:attachment.
+						String riAttachment = element.select("ri|attachment").first().outerHtml();
+						for (String imageKey : pagesStack.peek().images.keySet()) {
+							if (imageKey.indexOf(riAttachment) != -1) {
+								image = pagesStack.peek().images.get(imageKey);
+								break;
+							}
+						}
+						// Still not found?
+						if (image == null) {
+							//throw new IllegalArgumentException("ac:image not found in page images: " + element.outerHtml());
+							LOGGER.log(Level.SEVERE, "ac:image not found in page images: {0}", element.outerHtml());
+							continue;
+						}
 					}
 					result.add(new Image(downloadDir.getAbsolutePath() + "/" + image.filename));
 				} else if (node.nodeName().equals("span")) {
@@ -543,6 +561,8 @@ public class Formatter {
 						result.add(new Emoticon(Emoticon.INFORMATION));
 					} else if (name.equals("tick")) {
 						result.add(new Emoticon(Emoticon.TIP));
+					} else if (name.equals("smile")) {
+						result.add(new Emoticon(Emoticon.SMILE));
 					} else {
 						System.err.println("Emoticon not supported: " + name);
 					}

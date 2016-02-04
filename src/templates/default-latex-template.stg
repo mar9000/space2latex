@@ -102,6 +102,7 @@ document(d) ::= <<
     \path[fill=red!50!black,draw=none] (interior.south west) rectangle node[white]{\Huge\bfseries !} ([xshift=4mm]interior.north west);
     },#1}
 % Emoticons.
+\newcommand{\emoticonsmile}{\includegraphics{../smile.pdf}}
 \newcommand{\emoticonlight}{\includegraphics{../lightbulb_on.pdf}}
 \newcommand{\emoticonwarning}{\tcbox[tcbox raise base,nobeforeafter,colback=red!5!white,colframe=red!75!black,valign=center,arc=2mm,top=.1mm,bottom=.1mm,left=.5mm,right=.5mm]{!}\hspace{.4em}}
 \newcommand{\emoticoninformation}{\tcbox[tcbox raise base,nobeforeafter,colback=blue!5!white,colframe=blue!75!black,valign=center,arc=2mm,top=.1mm,bottom=.1mm,left=.5mm,right=.5mm]{i}\hspace{.4em}}

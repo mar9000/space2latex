@@ -23,6 +23,7 @@ public class Emoticon implements LatexElement {
 	public static final int WARNING = 1;
 	public static final int INFORMATION = 2;
 	public static final int TIP = 3;
+	public static final int SMILE = 4;
 	
 	public Emoticon(int type) {
 		this.type = type;
@@ -37,6 +38,8 @@ public class Emoticon implements LatexElement {
 			return "information";
 		if (isTip())
 			return "tip";
+		if (isSmile())
+			return "smile";
 		return "unknown";
 	}
 	
@@ -54,6 +57,10 @@ public class Emoticon implements LatexElement {
 	
 	public boolean isTip() {
 		return type == TIP;
+	}
+	
+	public boolean isSmile() {
+		return type == SMILE;
 	}
 	
 }
