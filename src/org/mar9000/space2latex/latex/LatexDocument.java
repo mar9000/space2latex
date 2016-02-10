@@ -57,6 +57,7 @@ public class LatexDocument {
 	public void addChapter(Part part, Chapter chapter) {
 		part.addChapter(chapter);
 		chapters.put(chapter.title, chapter);
+		// Chapter number not yet assigned and not inline.
 		if (chapter.number == -1 && !chapter.inline)
 			chapter.number = chapterCounter++;
 	}

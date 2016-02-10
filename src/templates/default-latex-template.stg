@@ -190,7 +190,12 @@ Part(p) ::= <<
 
 Chapter(c) ::= <<
 % Chapter from page: «c.title» .
-«if(!c.inline)»\chapter{«c.latexTitle»}«else»\vspace*{1in} {\Huge \textbf{«c.latexTitle»}} \vspace*{.5in}«endif»
+«if(!c.inline)»\chapter{«c.latexTitle»}«else»% Each inline chapter declares its own label.
+\hypertarget{inline-chapter-«c.title»}
+\vskip 1in
+{\Huge \textbf{«c.latexTitle»}}
+\vskip .5in «endif»
+
 
 «c.elements:element()»
 % End of chapter from page: «c.title» .

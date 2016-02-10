@@ -30,7 +30,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import org.mar9000.space2latex.Space2Latex;
 import org.mar9000.space2latex.WikiImage;
 import org.mar9000.space2latex.WikiPage;
 import org.mar9000.space2latex.log.S2LLogUtils;
@@ -318,7 +317,10 @@ public class Formatter {
 							// Chapter.
 							Chapter chapter = latexDocument.getChapter(pageTitle, createMissingChapters);
 							if (chapter != null) {
-								labelString = "chapter." + chapter.number;
+								if (chapter.inline)
+									labelString = "inline-chapter-" + chapter.title;
+								else
+									labelString = "chapter." + chapter.number;
 							} else {
 								labelString = Label.getLabelString(pageTitle, null);
 								// There are links that seem to be errors, for instance link to "search scope" page, see the Constraints page.
@@ -337,7 +339,7 @@ public class Formatter {
 							l = new Label(anchor.length() == 0 ? labelString : pageTitle, anchor);
 							labels.put(l.getLabelString(), l);
 							// Chapter label are always defined.
-							if (labelString.startsWith("chapter."))
+							if (labelString.startsWith("chapter.") || labelString.startsWith("inline-chapter-"))
 								l.defined = true;
 						}
 						l.referenced = true;
@@ -580,7 +582,7 @@ public class Formatter {
 					// Format in line.
 					formatNodes(richTextBody.childNodes(), result);
 				} else if (node.nodeName().equals("ac:macro") && node.attr("ac:name").equals("unmigrated-wiki-markup")) {
-					System.err.println("\"unmigrated wiki markup in " + pagesStack.peek().title);
+					System.err.println("Old wiki markup, content will be ignored: " + pagesStack.peek().title);
 				} else if (element.nodeName().equals("ac:default-parameter")) {
 					// I think this should be ignored, do nothing.
 					continue;
