@@ -117,8 +117,13 @@ public class WikiPage {
 					queryURL = pageUrl + "/child/attachment?filename=" + URLEncoder.encode(imageKey);
 				} else {
 					// For thumbnail we construct directly the downloadURL without queryURL.
+					/* Some pages have thumbnail images for better online reading.
+					 * Here we download always the attached file to embed readable imagesinto the pdf.
 					downloadURL = pageUrl.substring(0, pageUrl.indexOf("/rest/api"))
 							+ "/download/thumbnails/" + page.id + "/" + URLEncoder.encode(imageKey);
+					*/
+					downloadURL = pageUrl.substring(0, pageUrl.indexOf("/rest/api"))
+							+ "/download/attachments/" + page.id + "/" + URLEncoder.encode(imageKey);
 				}
 				if (riPages.size() > 0) {
 					// The attachment is related with another page.
