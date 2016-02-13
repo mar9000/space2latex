@@ -164,7 +164,8 @@ verbatimDef(v) ::= <<
 
 VerbatimUse(e) ::= <<
 ~\\\\
-\BUseVerbatim{«e.key»}
+\tcbox[colframe=black!25!white,colback=black!1.5!white,nobeforeafter %
+,left=0mm,right=0mm,top=0mm,bottom=0mm,boxrule=0.5pt,arc=1mm]{\BUseVerbatim{«e.key»}}
 >>
 
 // --- Part and chapter.   ---
@@ -291,7 +292,9 @@ Hx(h) ::= <<
 
 // --- Graphcs.   ---
 Image(e) ::= <<
-\includegraphics[max width=0.8\linewidth]{«e.filename»}
+\tcbox[colframe=black!25!white,colback=white %
+,nobeforeafter,left=0mm,right=0mm,top=0mm,bottom=0mm %
+,boxrule=0.5pt,arc=1mm]{\includegraphics[max width=0.95\linewidth]{«e.filename»}}
 >>
 
 // --- Links and refs.   ---
