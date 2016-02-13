@@ -133,6 +133,11 @@ contents={%
 \author{«d.author»}
 \date{«d.date»}
 
+% I set parindent to 0 for two reasons: first to replicate HTML formatting that does not have parindent.
+% Second because for the above reason authors do not care correctly about paragraph breaks.
+% Visually the worst problem was that many short lines were indented reducing readability.
+\setlength{\parindent}{0pt}
+
 % ---------- Document.   ----------
 \begin{document}
 
@@ -162,10 +167,15 @@ verbatimDef(v) ::= <<
 \end{SaveVerbatim}
 >>
 
+// Looking at the wiki content I saw that 'structure-macro code', 'noformat' and 'pre' nodes are always
+// displayed not inline. Inline content is rendered using the 'code' node.
+// The following use of tcbox and before parameter achives the same behavior of an HTML page:
+// even when the verbatim content is present without paragraph break the verbatim goes into the next line.
+// Content that could follow the verbatim goes into the third line.
 VerbatimUse(e) ::= <<
-~\\\\
-\tcbox[colframe=black!25!white,colback=black!1.5!white,nobeforeafter %
-,left=0mm,right=0mm,top=0mm,bottom=0mm,boxrule=0.5pt,arc=1mm]{\BUseVerbatim{«e.key»}}
+\tcbox[colframe=black!25!white,colback=black!1.5!white %
+, before={\par\smallskip\parindent=0pt} %
+,left=1mm,right=1mm,top=1mm,bottom=1mm,boxrule=0.5pt,arc=.3mm]{\BUseVerbatim{«e.key»}}
 >>
 
 // --- Part and chapter.   ---
