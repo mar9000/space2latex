@@ -587,8 +587,8 @@ public class Formatter {
 					// I think this should be ignored, do nothing.
 					continue;
 				} else {
-					//throw new IllegalArgumentException("Element " + element.nodeName() + " not supported.");
-					System.err.println("Element " + element.nodeName() + " not supported.");
+					throw new IllegalArgumentException("Element " + element.nodeName() + " not supported.");
+					//System.err.println("Element " + element.nodeName() + " not supported.");
 				}
 			} else {
 				throw new IllegalArgumentException("Node " + node.nodeName() + " not supported.");
