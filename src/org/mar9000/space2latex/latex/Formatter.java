@@ -32,6 +32,7 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.mar9000.space2latex.WikiImage;
 import org.mar9000.space2latex.WikiPage;
+import org.mar9000.space2latex.WikiPages;
 import org.mar9000.space2latex.log.S2LLogUtils;
 import org.w3c.css.sac.InputSource;
 import org.w3c.dom.css.CSSPrimitiveValue;
@@ -48,10 +49,10 @@ public class Formatter {
 	private final static String SPACE_PREFIX = "MPSD";
 	private File downloadDir = null;
 	private LatexDocument latexDocument = null;
-	private Map<String, WikiPage> pages = null;
+	private WikiPages pages = null;
 	private Map<String, Label> labels = new HashMap<String, Label>();
 
-	public Formatter(File downloadDir, Map<String, WikiPage> pages, LatexDocument latexDocument) {
+	public Formatter(File downloadDir, WikiPages pages, LatexDocument latexDocument) {
 		this.downloadDir = downloadDir;
 		this.latexDocument = latexDocument;
 		this.pages = pages;

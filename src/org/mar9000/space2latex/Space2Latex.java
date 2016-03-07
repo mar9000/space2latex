@@ -146,7 +146,7 @@ public class Space2Latex {
 	private File[] pageFiles = null;
 	private File destDir = null;
 	private File latexDir = null;
-	private Map<String, WikiPage> pages = null;
+	private WikiPages pages = null;
 	private void executeFormat() {
 		// Get source (dest-dir) directory and target (latex-dir) directory.
 		String destDirName = params.get(SWITCH_DEST_DIR);
@@ -191,7 +191,7 @@ public class Space2Latex {
 			}
 		});
 		// First load all pages, needed to resolve "include" macros.
-		pages = new HashMap<String, WikiPage>();
+		pages = new WikiPages();
 		for (int f = 0; f < pageFiles.length; f++) {
 			try {
 				WikiPage page = WikiPage.loadForFormat(pageFiles[f]);
