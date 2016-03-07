@@ -282,7 +282,8 @@ public class Space2Latex {
         documentTemplate.add("d", latexDocument);
         String latexOutputFileName = null;
         try {
-        	latexOutputFileName = WikiPage.getPageName(latexDocument.title) + ".tex";
+        	latexOutputFileName = latexDocument.title + "-" + latexDocument.date + ".tex";
+        	latexOutputFileName = WikiPage.getPageName(latexOutputFileName);
         	File latexOutputFile = new File(latexDir, latexOutputFileName);
 			IOUtils.saveStringToFile(documentTemplate.render(), latexOutputFile);
 		} catch (IOException e) {
