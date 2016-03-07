@@ -331,7 +331,7 @@ public class Formatter {
 						} else {
 							labelString = Label.getLabelString(pageTitle, anchor);
 							if (pages.get(pageTitle) == null)
-								System.err.println("A link will be created to a page that does not exists into the download dir.: "
+								System.err.println("A link/anchor will be created to a page that does not exists into the download dir.: "
 										+ pageTitle + "#" + anchor);
 						}
 						Label l = labels.get(labelString);
