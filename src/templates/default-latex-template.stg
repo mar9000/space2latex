@@ -142,6 +142,11 @@ contents={%
 \begin{document}
 
 % Title page.
+% Without the line below hyperref will warning that "page.i" has been used more than once.
+\hypersetup{pageanchor=false}
+% the "\mainmatter" command is issued by the TOC element after the "\tableofcontents" command.
+\frontmatter
+\addcontentsline{toc}{chapter}{Front cover}
 \BgThispage
 \maketitle
 \clearpage
@@ -187,7 +192,12 @@ documentPart(dp) ::= <<
 
 TOC(toc) ::= <<
 % TOC.
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Contents}
 \tableofcontents
+\hypersetup{pageanchor=true}
+\mainmatter
 >>
 
 Part(p) ::= <<
@@ -202,6 +212,8 @@ Part(p) ::= <<
 Chapter(c) ::= <<
 % Chapter from page: «c.title» .
 «if(!c.inline)»\chapter{«c.latexTitle»}«else»% Each inline chapter declares its own label.
+\phantomsection
+\addcontentsline{toc}{chapter}{«c.title»}
 \hypertarget{inline-chapter-«c.title»}
 \vskip 1in
 {\Huge \textbf{«c.latexTitle»}}
