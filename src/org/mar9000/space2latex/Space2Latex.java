@@ -23,9 +23,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,15 +36,22 @@ import org.mar9000.space2latex.latex.TOC;
 import org.mar9000.space2latex.log.S2LLogUtils;
 import org.mar9000.space2latex.utils.ConfluenceRESTUtils;
 import org.mar9000.space2latex.utils.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
+import ch.qos.logback.classic.Level;
+
 public class Space2Latex {
 	
-	private static Logger LOGGER = S2LLogUtils.getLogger(Space2Latex.class.getName());
+	private static Logger LOGGER = S2LLogUtils.getLogger(Space2Latex.class);
 
 	public static void main(String[] args) throws Exception {
+		ch.qos.logback.classic.Logger rootLogger =
+				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+		rootLogger.setLevel(Level.WARN);
 		Space2Latex s2l = new Space2Latex(args);
 		s2l.execute();
 	}
@@ -116,7 +120,7 @@ public class Space2Latex {
 		if (url == null) {
 			showError(SWITCH_URL + " parameter is mandatory.");
 		} else {
-			LOGGER.log(Level.INFO, "Download URL: {0}", url);
+			LOGGER.info("Download URL: {}", url);
 		}
 		//
 		String destDirName = params.get(SWITCH_DEST_DIR);
@@ -126,14 +130,14 @@ public class Space2Latex {
 		if (!destDir.isDirectory()) {
 			showError("Destination directory " + destDirName + " is not a directory.");
 		} else {
-			LOGGER.log(Level.INFO, "Destination directory: {0}", destDir.getAbsolutePath());
+			LOGGER.info("Destination directory: {}", destDir.getAbsolutePath());
 		}
 		// Download pages returned by the passed URL.
 		int start = params.get(SWITCH_START) != null ?
 				Integer.parseInt(params.get(SWITCH_START)) : 0;
 		int limit = params.get(SWITCH_LIMIT) != null ?
 				Integer.parseInt(params.get(SWITCH_LIMIT)) : ConfluenceRESTUtils.LIMIT_FOR_REQUEST;
-		LOGGER.log(Level.INFO, "Download limits: start={0}, limit={1}", new Object[]{start, limit});
+		LOGGER.debug("Download limits: start={}, limit={}", new Object[]{start, limit});
 		try {
 			ConfluenceRESTUtils.getPages(url, start, limit, destDir);
 		} catch (MalformedURLException e) {
@@ -156,7 +160,7 @@ public class Space2Latex {
 		if (!destDir.isDirectory()) {
 			showError("Destination directory " + destDirName + " is not a directory.");
 		} else {
-			LOGGER.log(Level.INFO, "Destination directory used during download: {0}", destDir);
+			LOGGER.info("Destination directory used during download: {}", destDir);
 		}
 		// Latex dir.
 		String latexDirName = params.get(SWITCH_LATEX_DIR);
@@ -166,7 +170,7 @@ public class Space2Latex {
 		if (!latexDir.isDirectory()) {
 			showError("Destination directory for latex files " + latexDirName + " is not a directory.");
 		} else {
-			LOGGER.log(Level.INFO, "Generated files will go to: {0}", latexDir);
+			LOGGER.info("Generated files will go to: {}", latexDir);
 		}
 		// Document definition.
 		String documentsDefPath = params.get(SWITCH_DOCUMENTS_DEF);
@@ -178,7 +182,7 @@ public class Space2Latex {
 		} else if (documentsDef.isDirectory()) {
 			showError("Documents definition " + documentsDefPath + " is a directory.");
 		} else {
-			LOGGER.log(Level.INFO, "Pages will be processed accordly to: {0}", documentsDefPath);
+			LOGGER.info("Pages will be processed accordingly to: {}", documentsDefPath);
 		}
 		// Create missing chapter?
 		createMissingChapters = params.get(SWITCH_INCLUDE_ALL).equals("true");
@@ -199,7 +203,7 @@ public class Space2Latex {
 				// Exclude?
 				if (excludes.contains(pageFiles[f].getName())) {
 					page.isExcluded = true;
-					LOGGER.log(Level.INFO, "Page will be excluded as requested: {0}", page.title);
+					LOGGER.debug("Page will be excluded as requested: {}", page.title);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -221,23 +225,25 @@ public class Space2Latex {
 		Elements documentsList = documents.select("document");
 		// Format each document.
 		for (Element document : documentsList) {
-			LOGGER.info("\n********** Begin document. **********");
+			LOGGER.info("");
+			LOGGER.info("********** Begin document. **********");
 			if (document.attr("enabled").equals("false")) {
-				LOGGER.log(Level.INFO, "Document is not enabled: {0}", document.attr("title"));
+				LOGGER.info("Document is not enabled: {}", document.attr("title"));
 			} else {
-				LOGGER.log(Level.INFO, "Format document: {0}", document.attr("title"));
+				LOGGER.info("Format document: {}", document.attr("title"));
 				formatDocument(document);
 			}
 			LOGGER.info("********** End document. **********");
 		}
 		
 		// Display result about not included pages.
-		LOGGER.info("\n********** Resume. **********");
+		LOGGER.info("");
+		LOGGER.info("********** Resume. **********");
 		LOGGER.info("Pages not inclded in any document:");
 		for (String pageTitle : pages.keySet()) {
 			WikiPage page = pages.get(pageTitle);
 			if (!page.isExcluded && !page.alreadyIncluded) {
-				LOGGER.log(Level.INFO, "  {0}", pageTitle);
+				LOGGER.info("  {}", pageTitle);
 			}
 		}
 	}
@@ -299,7 +305,7 @@ public class Space2Latex {
 	}
 	
 	private void showError(String message) {
-		LOGGER.severe(message);
+		LOGGER.error(message);
 		System.exit(1);
 	}
 	

@@ -16,14 +16,13 @@
  */
 package org.mar9000.space2latex.log;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class S2LLogUtils {
 	
-	public static Logger getLogger(String name) {
-		Logger log = Logger.getLogger(name);
-		log.setUseParentHandlers(false);
-		log.addHandler(new MyConsoleHandler());
+	public static Logger getLogger(Class<?> c) {
+		Logger log = LoggerFactory.getLogger(c);
 		return log;
 	}
 

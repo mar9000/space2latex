@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -34,6 +32,7 @@ import org.mar9000.space2latex.WikiImage;
 import org.mar9000.space2latex.WikiPage;
 import org.mar9000.space2latex.WikiPages;
 import org.mar9000.space2latex.log.S2LLogUtils;
+import org.slf4j.Logger;
 import org.w3c.css.sac.InputSource;
 import org.w3c.dom.css.CSSPrimitiveValue;
 import org.w3c.dom.css.CSSStyleDeclaration;
@@ -44,7 +43,7 @@ import com.steadystate.css.parser.CSSOMParser;
 
 public class Formatter {
 
-	private static Logger LOGGER = S2LLogUtils.getLogger(Formatter.class.getName());
+	private static Logger LOGGER = S2LLogUtils.getLogger(Formatter.class);
 	
 	private final static String SPACE_PREFIX = "MPSD";
 	private File downloadDir = null;
@@ -64,16 +63,16 @@ public class Formatter {
 		this.createMissingChapters = createMissingChapters;
 		for (WikiPage page : pages.values()) {
 			if (page.isExcluded) {
-				System.out.println("Page excluded as requested: " + page.title);
+				LOGGER.info("Page excluded as requested: {}", page.title);
 				continue;
 			}
 			pagesStack.push(page);
 			Chapter chapter = latexDocument.getChapter(pagesStack.peek().title, createMissingChapters);
 			if (chapter == null)
 				continue;
-			System.out.println("Format page: " + page.title);
+			LOGGER.info("Format page: {}", page.title);
 			if (page.alreadyIncluded) {
-				System.err.println("Page already included: " + page.title);
+				LOGGER.warn("I'm going to format a page already included: {}", page.title);
 			}
 			page.alreadyIncluded = true;
 			formatNodes(page.pageContent.childNodes(), chapter.elements);
@@ -101,7 +100,7 @@ public class Formatter {
 						hx.fontSize = "Huge";
 						le = hx;
 					} else {
-						System.err.println("Warning H1 elements typeset sections like H2 elements.");
+						LOGGER.warn("Warning H1 elements typeset LaTeX sections like H2 elements, page: {}", pagesStack.peek().title);
 						Section section = new Section(Section.TYPE_SECTION);
 						le = section;
 					}
@@ -116,7 +115,7 @@ public class Formatter {
 					} else {
 						// TODO: workaround because there is an image inside an H2 element.
 						if (element.childNodes().get(0).nodeName().equals("ac:image")) {
-							System.err.println("Using workaround for image inside H2.");
+							LOGGER.debug("Using workaround for image inside H2.");
 							// Do not create H2, create element inside current result.
 							formatNodes(element.childNodes(), result);
 							continue;
@@ -227,7 +226,7 @@ public class Formatter {
 					result.add(new Newline());
 				} else if ((node.nodeName().equals("ac:macro") || element.nodeName().equals("ac:structured-macro"))
 						&& node.attr("ac:name").equals("toc")) {
-					System.out.println("Page TOC omitted: " + pagesStack.peek().title);
+					LOGGER.info("Page TOC omitted: {}", pagesStack.peek().title);
 					continue;
 				} else if ((element.nodeName().equals("ac:structured-macro") || node.nodeName().equals("ac:macro"))
 						&& element.attr("ac:name").equals("anchor")) {
@@ -239,7 +238,7 @@ public class Formatter {
 						// Found.
 						if (label.defined) {
 							// Label created by anchor definition.
-							System.err.println("Label already defined: " + labelString);
+							LOGGER.error("Label '{}' already defined, page is {}", labelString, pagesStack.peek().title);
 						} else {
 							// Label created by a link definition, define and add at this document point.
 							label.defined = true;
@@ -299,8 +298,8 @@ public class Formatter {
 						space = riPage.attr("ri:space-key");
 						if (space.startsWith(SPACE_PREFIX)) {
 							// There are link that wrongly point to space other then MPSD33, usually this is an error.
-							System.err.println("Page " + pagesStack.peek().title
-									+ " contains link to specific space " + space + ". It will be ignored.");
+							LOGGER.error("Page {} contains link '{}' to specific space {}. Space will be ignored."
+									, pagesStack.peek().title, pageTitle, space);
 							space = "";
 						}
 					}
@@ -326,14 +325,14 @@ public class Formatter {
 								labelString = Label.getLabelString(pageTitle, null);
 								// There are links that seem to be errors, for instance link to "search scope" page, see the Constraints page.
 								if (pages.get(pageTitle) == null)
-									System.err.println("A link will be created to a page that does not exists into the download dir.: "
-											+ pageTitle);
+									LOGGER.error("Page '{}' has a link to a page '{}' that does not exists into the download dir."
+											, pagesStack.peek().title, pageTitle);
 							}
 						} else {
 							labelString = Label.getLabelString(pageTitle, anchor);
 							if (pages.get(pageTitle) == null)
-								System.err.println("A link/anchor will be created to a page that does not exists into the download dir.: "
-										+ pageTitle + "#" + anchor);
+								LOGGER.error("Page '{}' has a link/anchor '{}#{}' to a page that does not exists into the download dir."
+										, pagesStack.peek().title, pageTitle, anchor);
 						}
 						Label l = labels.get(labelString);
 						if (l == null) {  // Create a Label with defined = false.
@@ -383,37 +382,37 @@ public class Formatter {
 					if (node.nodeName().equals("ac:structured-macro")) {
 						Element riPage = element.select("ri|page").first();
 						if (riPage == null) {
-							System.err.println("ac:structured-macro 'include' does not have ri:page." + element.outerHtml());
+							LOGGER.error("ac:structured-macro 'include' does not have ri:page: {}", element.outerHtml());
 							continue;
 						}
 						includedTitle = riPage.attr("ri:content-title");
 					} else {   // ac:macro.
 						Element defaultParameter = element.select("ac|default-parameter").first();
 						if (defaultParameter == null) {
-							System.err.println("ac:macro 'include' does not have ac:default-parameter." + element.outerHtml());
+							LOGGER.error("ac:macro 'include' does not have ac:default-parameter: {}", element.outerHtml());
 							continue;
 						}
 						includedTitle = defaultParameter.text();
 					}
 					if (includedTitle == null) {
-						System.err.println("ri:page to include does not have content-title." + element.outerHtml());
+						LOGGER.error("ri:page to include does not have content-title: {}", element.outerHtml());
 						continue;
 					}
 					WikiPage pageToInclude = pages.get(includedTitle);
 					if (pageToInclude == null) {
-						System.err.println("Page to include not found: " + includedTitle);
+						LOGGER.error("Page to include not found: {}", includedTitle);
 						continue;
 					}
 					if (pageToInclude.isExcluded) {
-						System.out.println("Page excluded as requested: " + includedTitle);
+						LOGGER.info("Page excluded as requested: {}", includedTitle);
 						continue;
 					}
 					if (pageToInclude.alreadyIncluded) {
-						System.err.println("About to include a page already included: " + pageToInclude.title);
+						LOGGER.warn("About to include a page already included: {}", pageToInclude.title);
 					}
 					pageToInclude.alreadyIncluded = true;
 					pagesStack.push(pageToInclude);
-					System.out.println("Include page: " + includedTitle);
+					LOGGER.info("Include page: {}", includedTitle);
 					formatNodes(pagesStack.peek().pageContent.childNodes(), result);
 					pagesStack.pop();
 				} else if (node.nodeName().equals("ac:structured-macro") && node.attr("ac:name").equals("section")) {
@@ -437,7 +436,7 @@ public class Formatter {
 						// Still not found?
 						if (image == null) {
 							//throw new IllegalArgumentException("ac:image not found in page images: " + element.outerHtml());
-							LOGGER.log(Level.SEVERE, "ac:image not found in page images: {0}", element.outerHtml());
+							LOGGER.error("ac:image not found in page images: {}", element.outerHtml());
 							continue;
 						}
 					}
@@ -467,7 +466,7 @@ public class Formatter {
 										c.b = rgbColor.getBlue().toString();
 										container = c.elements;
 									} else {
-										System.err.println("CSSPrimitiveValue not supported: " + value.toString());
+										LOGGER.warn("CSSPrimitiveValue not supported: {}", value.toString());
 									}
 								} else if (propertyName.equals("text-decoration")) {
 									CSSPrimitiveValue primitive = (CSSPrimitiveValue)value;
@@ -483,18 +482,18 @@ public class Formatter {
 											result.add(underline);
 											container = underline.elements;
 										} else {
-											System.err.println("Text decoration not supported: " + decoration);
+											LOGGER.info("Text decoration not supported: {}", decoration);
 										}
 									} else {
-										System.err.println("CSSPrimitiveValue not supported: " + value.toString());
+										LOGGER.info("CSSPrimitiveValue not supported: {}", value.toString());
 									}
 								} else {
-									System.err.println("CSS property not supported: " + propertyName);
+									LOGGER.info("CSS property not supported: {}", propertyName);
 								}
 							}
 						} catch (IOException e) {
 							e.printStackTrace();
-							System.err.println("Error parsing CSS style: " + style);
+							LOGGER.error("Error parsing CSS style: {}", style);
 						}
 					}
 					// Format content in line.
@@ -567,7 +566,7 @@ public class Formatter {
 					} else if (name.equals("smile")) {
 						result.add(new Emoticon(Emoticon.SMILE));
 					} else {
-						System.err.println("Emoticon not supported: " + name);
+						LOGGER.warn("Emoticon not supported: {}", name);
 					}
 				} else if ((element.nodeName().equals("ac:macro") || element.nodeName().equals("ac:structured-macro"))
 						&& node.attr("ac:name").equals("note")) {
@@ -577,19 +576,18 @@ public class Formatter {
 				} else if (element.nodeName().equals("ac:macro") && node.attr("ac:name").equals("toc-zone")) {
 					Element richTextBody = element.select("ac|rich-text-body").first();
 					if (richTextBody == null) {
-						System.err.println("Macro 'toc-zone' without 'rich-text-body' element.");
+						LOGGER.error("Macro 'toc-zone' without 'rich-text-body' element.");
 						continue;
 					}
 					// Format in line.
 					formatNodes(richTextBody.childNodes(), result);
 				} else if (node.nodeName().equals("ac:macro") && node.attr("ac:name").equals("unmigrated-wiki-markup")) {
-					System.err.println("Old wiki markup, content will be ignored: " + pagesStack.peek().title);
+					LOGGER.warn("Page '{}' contains old wiki markup, page content will be ignored.", pagesStack.peek().title);
 				} else if (element.nodeName().equals("ac:default-parameter")) {
 					// I think this should be ignored, do nothing.
 					continue;
 				} else {
 					throw new IllegalArgumentException("Element " + element.nodeName() + " not supported.");
-					//System.err.println("Element " + element.nodeName() + " not supported.");
 				}
 			} else {
 				throw new IllegalArgumentException("Node " + node.nodeName() + " not supported.");

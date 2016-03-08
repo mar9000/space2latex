@@ -24,8 +24,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -35,10 +33,11 @@ import org.jsoup.select.Elements;
 import org.mar9000.space2latex.log.S2LLogUtils;
 import org.mar9000.space2latex.utils.ConfluenceRESTUtils;
 import org.mar9000.space2latex.utils.IOUtils;
+import org.slf4j.Logger;
 
 public class WikiPage {
 	
-	private static Logger LOGGER = S2LLogUtils.getLogger(WikiPage.class.getName());
+	private static Logger LOGGER = S2LLogUtils.getLogger(WikiPage.class);
 	
 	public static final String JSON_TYPE_ATTR = "type";
 	public static final String JSON_TYPE_VALUE_PAGE = "page";
@@ -85,7 +84,7 @@ public class WikiPage {
 			storage = bodyObj.getJSONObject(JSON_STORAGE_ATTR).getString(JSON_VALUE_ATTR);
 		}
 		WikiPage page = new WikiPage(jsonPage, title, id, storage);
-		LOGGER.log(Level.INFO, "  Page downloaded: {0}", title);
+		LOGGER.info("  Page downloaded: {}", title);
 		downloadWikiPageImages(page);
 		return page;
 	}
@@ -158,10 +157,10 @@ public class WikiPage {
 			// Download the image data.
 			image.filename = imageKey.replace(' ', '_');   // Space are not handled by LaTeX.
 			if (downloadURL != null) {
-				LOGGER.log(Level.INFO, "    about to download image {0}/{1}", new Object[]{image.pageId, image.filename});
+				LOGGER.info("    about to download image {}/{}", new Object[]{image.pageId, image.filename});
 				image.data = IOUtils.getImageFromURL(downloadURL);
 			} else {
-				LOGGER.log(Level.SEVERE, "    NULL download URL for page/image: {0}/{1}"
+				LOGGER.info("    NULL download URL for page/image: {}/{}"
 						, new Object[]{image.pageId, image.filename});
 			}
 			page.images.put(imageKey, image);
@@ -171,8 +170,8 @@ public class WikiPage {
 	private static String getAttachmentDownloadURL(String queryURL) throws MalformedURLException {
 		JSONObject response = ConfluenceRESTUtils.getURLResponse(queryURL);
 		if (response.getInt(JSON_SIZE_ATTR) == 0) {
-			LOGGER.log(Level.SEVERE, "Image at URL non found: {0}", queryURL);
-			LOGGER.log(Level.SEVERE, "Response: {0}", response.toString());
+			LOGGER.error("Image at URL non found: {}", queryURL);
+			LOGGER.error("Response: {}", response.toString());
 			return null;
 		}
 		JSONObject firstResult = (JSONObject)response.getJSONArray(JSON_RESULTS_ATTR).get(0);
