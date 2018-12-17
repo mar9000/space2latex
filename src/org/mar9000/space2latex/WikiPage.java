@@ -131,7 +131,9 @@ public class WikiPage {
 					String contentTitle = riPage.attr("ri:content-title").replaceAll(" ", "%20");					
 					String self = page.json.getJSONObject(JSON_LINKS_ATTR).getString(JSON_SELF_ATTR);
 					String newQueryURL = self.substring(0, self.lastIndexOf('/'))
-							+ "?title=" + contentTitle + "&spaceKey=" + space;
+							+ "?title=" + contentTitle;
+					if (space.length() > 0)   // I've found a case where space is "".
+						newQueryURL += "&spaceKey=" + space;
 					JSONObject jsonNewQuery = ConfluenceRESTUtils.getURLResponse(newQueryURL);
 					if (jsonNewQuery.getInt(JSON_SIZE_ATTR) == 0)
 						throw new RuntimeException("Page \"" + contentTitle + "\" in space " + space + " not found.");
@@ -140,6 +142,8 @@ public class WikiPage {
 					// Overwrite queryURL.
 					String newPageUrl = jsonNewPage.getJSONObject(JSON_LINKS_ATTR).getString(JSON_SELF_ATTR);
 					queryURL = newPageUrl + "/child/attachment?filename=" + URLEncoder.encode(imageKey);
+					// queryURL has been updated, update downloadURL.
+					downloadURL = getAttachmentDownloadURL(queryURL);
 				}
 				if (!isThumbnail)
 					downloadURL = getAttachmentDownloadURL(queryURL);
@@ -156,6 +160,7 @@ public class WikiPage {
 			}
 			// Download the image data.
 			image.filename = imageKey.replace(' ', '_');   // Space are not handled by LaTeX.
+			image.filename = imageKey.replaceAll("%", ".p.");   // '%' are not handled by LaTeX.
 			if (downloadURL != null) {
 				LOGGER.info("    about to download image {}/{}", new Object[]{image.pageId, image.filename});
 				image.data = IOUtils.getImageFromURL(downloadURL);
