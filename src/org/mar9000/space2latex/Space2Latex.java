@@ -51,7 +51,7 @@ public class Space2Latex {
 	public static void main(String[] args) throws Exception {
 		ch.qos.logback.classic.Logger rootLogger =
 				(ch.qos.logback.classic.Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-		rootLogger.setLevel(Level.WARN);
+		rootLogger.setLevel(Level.INFO);
 		Space2Latex s2l = new Space2Latex(args);
 		s2l.execute();
 	}
@@ -243,7 +243,7 @@ public class Space2Latex {
 		for (String pageTitle : pages.keySet()) {
 			WikiPage page = pages.get(pageTitle);
 			if (!page.isExcluded && !page.alreadyIncluded) {
-				LOGGER.info("  {}", pageTitle);
+				LOGGER.info("  {}", page.getPageName());
 			}
 		}
 	}
