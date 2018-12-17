@@ -177,6 +177,10 @@ public class Formatter {
 					St st = new St();
 					result.add(st);
 					formatNodes(element.childNodes(), st.elements);
+				} else if (element.nodeName().equals("u")) {   // Underline.
+					TextUnderline underline = new TextUnderline();
+					result.add(underline);
+					formatNodes(element.childNodes(), underline.elements);
 				} else if (element.nodeName().equals("strong")) {
 					Bold b = new Bold();
 					result.add(b);
@@ -228,6 +232,15 @@ public class Formatter {
 						&& node.attr("ac:name").equals("toc")) {
 					LOGGER.info("Page TOC omitted: {}", pagesStack.peek().title);
 					continue;
+				} else if (element.nodeName().equals("ac:structured-macro") && node.attr("ac:name").equals("toc-zone")) {
+					LOGGER.info("Page TOC-ZONE omitted: {}", pagesStack.peek().title);
+					Elements params = element.select("ac|parameter").select("[ac:name=includePages]");
+					if (params.size() == 0)
+						continue;
+					if (params.get(0).text().equals("true")) {
+						Element richtext = element.select("ac|rich-text-body").first();
+						formatNodes(richtext.childNodes(), result);
+					}
 				} else if ((element.nodeName().equals("ac:structured-macro") || node.nodeName().equals("ac:macro"))
 						&& element.attr("ac:name").equals("anchor")) {
 					String anchor = element.text();
@@ -581,7 +594,8 @@ public class Formatter {
 					}
 					// Format in line.
 					formatNodes(richTextBody.childNodes(), result);
-				} else if (node.nodeName().equals("ac:macro") && node.attr("ac:name").equals("unmigrated-wiki-markup")) {
+				} else if ((node.nodeName().equals("ac:macro") || node.nodeName().equals("ac:structured-macro")) && node.attr("ac:name").equals("unmigrated-wiki-markup")) {
+					result.add(new TextElement("Old wiki markup is not supported, page content has been ignored."));
 					LOGGER.warn("Page '{}' contains old wiki markup, page content will be ignored.", pagesStack.peek().title);
 				} else if (element.nodeName().equals("ac:default-parameter")) {
 					// I think this should be ignored, do nothing.
@@ -606,6 +620,8 @@ public class Formatter {
 				else if (element.nodeName().equals("span")) {
 					formatPre(element.childNodes(), buffer);
 				} else if (element.nodeName().equals("code")) {
+					formatPre(element.childNodes(), buffer);
+				} else if (element.nodeName().equals("a")) {
 					formatPre(element.childNodes(), buffer);
 				} else {
 					throw new IllegalArgumentException("Element " + element.nodeName() + " not supported in 'pre' elements.");

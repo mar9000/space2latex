@@ -31,7 +31,7 @@ import org.mar9000.space2latex.WikiPage;
 public class ConfluenceRESTUtils {
 
 	public static final int LIMIT_FOR_REQUEST = 25;
-	public static final int MAX_REQUEST_TRY = 3;
+	public static final int MAX_REQUEST_TRY = 5;
 	
 	public static void getPages(String urlString, int start, int limit, File destDir) throws MalformedURLException {
 		int count = 0;
